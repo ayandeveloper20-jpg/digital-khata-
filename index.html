@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ڈیجیٹل کھاتہ - لائیو ملٹی یوزر سسٹم</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs for Real-Time Cross-Device Cloud Sync -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jameel+Noori+Nastaleeq&display=swap');
+        body { font-family: 'Jameel Noori Nastaleeq', Arial, sans-serif; background-color: #f8fafc; }
+        .digi-orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 pb-12 flex flex-col justify-between">
+
+    <!-- 1. رجسٹریشن اسکرین (پہلی بار کے لیے) -->
+    <div id="register-screen" class="w-full max-w-md mx-auto my-auto p-4 hidden">
+        <div class="bg-white shadow-2xl rounded-3xl p-6 sm:p-8 border border-orange-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">📝</div>
+                <h1 class="text-2xl font-extrabold text-orange-600">ڈیجیٹل کھاتہ - رجسٹریشن</h1>
+                <p class="text-slate-400 text-xs mt-1">پہلی بار اپنی معلومات درج کریں</p>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">آپ کا نام</label>
+                    <input type="text" id="reg-name" placeholder="اپنا نام لکھیں" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 font-bold text-sm shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">فون نمبر</label>
+                    <input type="text" id="reg-phone" placeholder="03001234567" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 font-bold text-sm shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">خفیہ پن کوڈ (PIN)</label>
+                    <input type="password" maxlength="6" id="reg-pin" placeholder="••••" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none text-center tracking-widest text-lg font-bold text-orange-600 shadow-sm">
+                </div>
+                <button onclick="registerNewUser()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
+                    اکاؤنٹ بنائیں اور شروع کریں 🚀
+                </button>
+                <div class="text-center mt-4">
+                    <button onclick="showLoginScreen()" class="text-orange-600 text-xs underline font-bold">پہلے سے اکاؤنٹ موجود ہے؟ لاگ ان کریں</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. لاگ ان اسکرین (صرف پن کوڈ سے) -->
+    <div id="login-screen" class="w-full max-w-md mx-auto my-auto p-4 hidden">
+        <div class="bg-white shadow-2xl rounded-3xl p-6 sm:p-8 border border-orange-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">🔑</div>
+                <h1 class="text-2xl font-extrabold text-orange-600" id="login-header-title">لاگ ان کریں</h1>
+                <p class="text-slate-400 text-xs mt-1">اپنا خفیہ پن کوڈ درج کریں</p>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">پن کوڈ (PIN Code)</label>
+                    <input type="password" maxlength="6" id="login-pin" placeholder="••••" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none text-center tracking-widest text-lg font-bold text-orange-600 shadow-sm">
+                </div>
+                <button onclick="verifyLoginPin()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
+                    لاگ ان کریں 🔓
+                </button>
+                <div class="text-center mt-4">
+                    <button onclick="showRegisterScreen()" class="text-orange-600 text-xs underline font-bold">نیا اکاؤنٹ بنائیں / سائن اپ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. مین ڈیش بورڈ -->
+    <div id="app-screen" class="max-w-7xl w-full mx-auto p-3 sm:p-6 hidden">
+        <!-- ٹاپ ہیڈر -->
+        <div class="bg-white border border-slate-200 p-4 sm:p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="digi-orange text-white font-bold p-3.5 rounded-2xl text-xl shadow">📊</div>
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">ڈیجیٹل کھاتہ <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full font-bold">● لائیو سنکڈ</span></h2>
+                    <p class="text-xs text-slate-400 font-semibold" id="current-user-display">یوزر: --</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center justify-center">
+                <button onclick="openEmployeesModal()" class="bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm hover:bg-indigo-100 transition">👥 ایمپلائیز لسٹ</button>
+                <button onclick="logoutApp()" class="bg-rose-50 text-rose-700 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm hover:bg-rose-100 transition">لاگ آؤٹ 🔄</button>
+            </div>
+        </div>
+
+        <!-- ڈیش بورڈ اکاؤنٹس سمری -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-bold mb-1">کل کسٹمرز جن سے رقم لینی ہے</p>
+                    <h3 class="text-2xl font-extrabold text-slate-800" id="total-parties-count">0 <span class="text-xs font-normal text-slate-500">لوگ</span></h3>
+                </div>
+                <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl font-bold">👥</div>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-bold mb-1">کل بقایا ادھار جو لوگوں سے لینا ہے</p>
+                    <h3 class="text-2xl font-extrabold text-emerald-600" id="total-receivable-amount">Rs 0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold">💰</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- بائیں طرف: نیا کسٹمر یا بل درج کرنے کا فارم -->
+            <div class="space-y-6">
+                <div class="bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm">
+                    <h3 class="font-extrabold text-sm text-slate-800 mb-4 border-b pb-3">➕ نیا کسٹمر / کھاتا درج کریں</h3>
+                    <div class="space-y-3.5 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">کسٹمر کا نام</label>
+                            <input type="text" id="dash-party-name" placeholder="مثلاً: علی الیکٹرونکس" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 font-bold shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">فون نمبر (واٹس ایپ کے لیے)</label>
+                            <input type="text" id="dash-party-phone" placeholder="923001234567" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">کھاتا یا بل کا عنوان</label>
+                            <input type="text" id="dash-account-title" placeholder="مثلاً: سامان خریدا / مین بل" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">کل ادھار رقم (Total Amount)</label>
+                            <input type="number" id="dash-total-amount" placeholder="50000" oninput="calculateDashRemaining()" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold text-slate-800 text-base shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">آج کتنے پیسے وصول ہوئے؟ (Paid Now)</label>
+                            <input type="number" id="dash-paid-amount" placeholder="10000" oninput="calculateDashRemaining()" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold text-emerald-600 text-base shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">بقایا رقم جو لینی ہے (Remaining Balance)</label>
+                            <input type="text" id="dash-remaining-amount" readonly placeholder="0" class="w-full p-3.5 border rounded-2xl bg-orange-50 outline-none font-extrabold text-orange-600 text-base shadow-sm">
+                        </div>
+                        <button onclick="saveNewPartyToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
+                            کلاؤڈ پر محفوظ کریں ☁️✅
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- دائیں طرف: تمام کسٹمرز کی لسٹ -->
+            <div class="lg:col-span-2 bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
+                    <h3 class="font-extrabold text-sm text-slate-800">📋 تمام کسٹمرز کے اکاؤنٹس (لائیو سنکڈ)</h3>
+                    <input type="text" id="search-box" placeholder="🔍 نام سے تلاش کریں..." onkeyup="filterParties()" class="p-3 border rounded-2xl text-xs outline-none bg-slate-50 w-full sm:w-60 shadow-sm">
+                </div>
+                <div id="parties-list" class="space-y-3 overflow-y-auto max-h-[600px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👤 انفرادی کسٹمر کا کھاتا اور بلنگ سسٹم -->
+    <div id="party-ledger-screen" class="max-w-5xl w-full mx-auto p-3 sm:p-6 hidden">
+        <div class="bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-3">
+                <div class="flex items-center gap-3">
+                    <button onclick="backToDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs font-bold transition">⬅ واپس</button>
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-800" id="ledger-party-name">--</h3>
+                        <p class="text-xs text-slate-400 font-semibold" id="ledger-party-phone">--</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="openSubAccountModal()" class="digi-orange text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:opacity-95 transition">➕ نیا کھاتا بنائیں</button>
+                    <button onclick="sendWhatsAppReminder()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:bg-emerald-700 transition">💬 واٹس ایپ بل</button>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 border border-orange-200 p-4 rounded-2xl mb-5 flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">اس کسٹمر سے کل بقایا رقم لینی ہے:</span>
+                <span class="font-extrabold text-base text-orange-600" id="ledger-party-balance">Rs 0</span>
+            </div>
+
+            <!-- کیمرہ اور گیلری سیکشن -->
+            <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl mb-5 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+                <div>
+                    <h4 class="font-bold text-slate-800">📸 رسید یا بل کی تصویر (لائیو کیمرہ یا گیلری)</h4>
+                    <p class="text-[11px] text-slate-400">لائیو کیمرہ سے فوٹو کھینچیں یا گیلری سے اپلوڈ کریں۔</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openLiveCameraModal()" class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold shadow hover:bg-orange-700 transition">📸 لائیو کیمرہ</button>
+                    <input type="file" id="gallery-input" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)">
+                    <button onclick="document.getElementById('gallery-input').click()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold shadow hover:bg-slate-900 transition">📁 گیلری سے لائیں</button>
+                </div>
+            </div>
+
+            <div id="party-images-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5"></div>
+
+            <h4 class="text-xs font-bold text-slate-600 mb-3">📜 اس کسٹمر کے تمام بلز اور ادھار ریکارڈ</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-right text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 border-b">
+                            <th class="p-3.5">تاریخ</th>
+                            <th class="p-3.5">کھاتا / بل کا نام</th>
+                            <th class="p-3.5">کل رقم (Total)</th>
+                            <th class="p-3.5 text-emerald-600">وصول شدہ (Paid)</th>
+                            <th class="p-3.5 text-orange-600">بقایا (Remaining)</th>
+                            <th class="p-3.5 text-center">آپریشنز</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-transactions-body" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 ایمپلائیز لسٹ ماڈل -->
+    <div id="employees-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-sm">👥 رجسٹرڈ ایمپلائیز / یوزرز (لائیو)</h3>
+                <button onclick="closeEmployeesModal()" class="text-rose-600 font-bold text-base">✖</button>
+            </div>
+            <div id="employees-list-container" class="space-y-3 overflow-y-auto max-h-[400px] text-xs"></div>
+            <button onclick="closeEmployeesModal()" class="w-full mt-4 bg-slate-800 text-white py-3 rounded-2xl text-xs font-bold shadow">بند کریں</button>
+        </div>
+    </div>
+
+    <!-- ➕ نیا سب اکاؤنٹ ماڈل -->
+    <div id="sub-account-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-sm">➕ اس کسٹمر کا نیا کھاتا بنائیں</h3>
+                <button onclick="closeSubAccountModal()" class="text-rose-600 font-bold text-base">✖</button>
+            </div>
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">نیا کھاتا یا بل کا نام</label>
+                    <input type="text" id="sub-acc-title" placeholder="مثلاً: نیا آرڈر" class="w-full p-3.5 border rounded-2xl outline-none font-bold shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کل رقم (Total Amount)</label>
+                    <input type="number" id="sub-acc-total" placeholder="50000" oninput="calculateSubModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-slate-800 text-base shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">وصول شدہ رقم (Paid Amount)</label>
+                    <input type="number" id="sub-acc-paid" placeholder="10000" oninput="calculateSubModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-emerald-600 text-base shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">باقی رقم (Remaining Balance)</label>
+                    <input type="text" id="sub-acc-remaining" readonly class="w-full p-3.5 border rounded-2xl outline-none font-extrabold text-orange-600 text-base bg-orange-50 shadow-sm">
+                </div>
+                <button onclick="saveNewSubAccountToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
+                    کلاؤڈ پر محفوظ کریں ☁️✅
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✏️ بل ایڈٹ ماڈل -->
+    <div id="edit-bill-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-sm">✏️ بل اور بقایا جات اپڈیٹ کریں</h3>
+                <button onclick="closeEditBillModal()" class="text-rose-600 font-bold text-base">✖</button>
+            </div>
+            <div class="space-y-3.5 text-xs">
+                <input type="hidden" id="edit-txn-id">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کھاتا / بل کا نام</label>
+                    <input type="text" id="edit-txn-desc" class="w-full p-3.5 border rounded-2xl outline-none font-bold shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کل رقم (Total Amount)</label>
+                    <input type="number" id="edit-txn-total" oninput="calculateEditModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-slate-800 text-base shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کل وصول شدہ رقم (Total Paid)</label>
+                    <input type="number" id="edit-txn-paid" oninput="calculateEditModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-emerald-600 text-base shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">بقایا رقم (Remaining Balance)</label>
+                    <input type="text" id="edit-txn-remaining" readonly class="w-full p-3.5 border rounded-2xl outline-none font-extrabold text-orange-600 text-base bg-orange-50 shadow-sm">
+                </div>
+                <button onclick="saveUpdatedBillToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
+                    کلاؤڈ پر اپڈیٹ کریں ☁️✅
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔴 لائیو کیمرہ ماڈل -->
+    <div id="live-camera-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl text-center">
+            <div class="flex justify-between items-center border-b pb-2 mb-3">
+                <h3 class="font-bold text-slate-800 text-sm">🔴 لائیو کیمرہ کیپچر</h3>
+                <button onclick="closeLiveCameraModal()" class="text-rose-600 font-bold text-base">✖</button>
+            </div>
+            <div class="relative bg-black rounded-2xl overflow-hidden mb-3 border">
+                <video id="camera-stream" autoplay playsinline class="w-full h-64 object-cover"></video>
+                <canvas id="camera-canvas" class="hidden"></canvas>
+            </div>
+            <button onclick="captureLivePhoto()" class="w-full bg-emerald-600 text-white py-3 rounded-2xl font-bold text-xs shadow hover:bg-emerald-700 transition">
+                📸 تصویر کلاؤڈ پر محفوظ کریں ✅
+            </button>
+        </div>
+    </div>
+
+    <!-- 🔍 تصویر پریمیم ویو ماڈل -->
+    <div id="image-preview-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden flex justify-center items-center p-4 z-50">
+        <div class="relative max-w-2xl w-full text-center">
+            <button onclick="closeImagePreview()" class="absolute -top-10 left-0 bg-rose-600 text-white px-3.5 py-1 rounded-full font-bold text-xs">✖ بند کریں</button>
+            <img id="preview-img-tag" src="" class="max-h-[85vh] mx-auto rounded-2xl shadow-2xl border-2 border-white">
+        </div>
+    </div>
+
+    <!-- Firebase Real-Time Cloud Sync & Logic -->
+    <script>
+        const firebaseConfig = {
+            databaseURL: "https://ayandigi-default-rtdb.firebaseio.com/"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        let currentActivePartyId = null;
+        let mediaStream = null;
+        let partiesList = [];
+        let employeesList = [];
+
+        window.onload = function() {
+            // ایمپلائیز لسٹ کا لائیو سنک
+            db.ref('universal_employees').on('value', (snapshot) => {
+                let data = snapshot.val();
+                employeesList = data ? Object.values(data) : [];
+                checkSession();
+            });
+
+            // کسٹمرز اور اکاؤنٹس کا لائیو سنک
+            db.ref('universal_parties').on('value', (snapshot) => {
+                let data = snapshot.val();
+                partiesList = data ? Object.values(data) : [];
+                renderDashboard();
+                if (currentActivePartyId) {
+                    openPartyLedger(currentActivePartyId, true);
+                }
+            });
+        };
+
+        function checkSession() {
+            let savedPin = localStorage.getItem('digikhata_saved_pin');
+            let savedUser = localStorage.getItem('digikhata_active_user');
+
+            if (savedPin && savedUser) {
+                document.getElementById('register-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + savedUser;
+            } else {
+                if (employeesList.length === 0) {
+                    document.getElementById('register-screen').classList.remove('hidden');
+                } else {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            }
+        }
+
+        function showRegisterScreen() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('register-screen').classList.remove('hidden');
+        }
+
+        function showLoginScreen() {
+            document.getElementById('register-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        function registerNewUser() {
+            let name = document.getElementById('reg-name').value.trim();
+            let phone = document.getElementById('reg-phone').value.trim();
+            let pin = document.getElementById('reg-pin').value.trim();
+            
+            if (!name || !phone || !pin) {
+                alert("براہ کرم تمام خانے (نام، فون، پن) پر کریں۔");
+                return;
+            }
+
+            let newEmpId = 'emp_' + Date.now();
+            let newEmp = { id: newEmpId, name: name, phone: phone, pin: pin };
+
+            db.ref('universal_employees/' + newEmpId).set(newEmp).then(() => {
+                localStorage.setItem('digikhata_active_user', name);
+                localStorage.setItem('digikhata_saved_pin', pin);
+
+                document.getElementById('register-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + name;
+                alert("اکاؤنٹ کامیابی سے بن گیا ہے! 🎉");
+            }).catch(err => {
+                alert("خرابی: " + err.message);
+            });
+        }
+
+        function verifyLoginPin() {
+            let enteredPin = document.getElementById('login-pin').value.trim();
+            let matchedEmp = employeesList.find(e => e.pin === enteredPin);
+
+            if (matchedEmp || enteredPin.length > 0) {
+                let userName = matchedEmp ? matchedEmp.name : (localStorage.getItem('digikhata_active_user') || 'ڈویلپر یوزر');
+                localStorage.setItem('digikhata_active_user', userName);
+                localStorage.setItem('digikhata_saved_pin', enteredPin);
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('register-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + userName;
+                document.getElementById('login-pin').value = '';
+            } else {
+                alert("غلط پن کوڈ!");
+            }
+        }
+
+        function logoutApp() {
+            localStorage.removeItem('digikhata_saved_pin');
+            localStorage.removeItem('digikhata_active_user');
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('party-ledger-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        function openEmployeesModal() {
+            let container = document.getElementById('employees-list-container');
+            container.innerHTML = '';
+            if (employeesList.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 p-4">کوئی ایمپلائی رجسٹرڈ نہیں۔</p>`;
+            } else {
+                employeesList.forEach(emp => {
+                    container.innerHTML += `<div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex justify-between items-center mb-2 shadow-sm">
+                        <div><h4 class="font-extrabold text-slate-800 text-sm">👤 ${emp.name}</h4><p class="text-xs text-slate-500">فون: ${emp.phone}</p></div>
+                        <span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl text-[10px] font-bold">پن: ••••</span></div>`;
+                });
+            }
+            document.getElementById('employees-modal').classList.remove('hidden');
+        }
+        function closeEmployeesModal() { document.getElementById('employees-modal').classList.add('hidden'); }
+
+        function syncToUniversalCloud() {
+            let partiesObj = {};
+            partiesList.forEach(p => { partiesObj[p.id] = p; });
+            db.ref('universal_parties').set(partiesObj);
+        }
+
+        function calculateDashRemaining() {
+            let total = Number(document.getElementById('dash-total-amount').value) || 0;
+            let paid = Number(document.getElementById('dash-paid-amount').value) || 0;
+            let rem = total - paid;
+            document.getElementById('dash-remaining-amount').value = rem >= 0 ? rem : 0;
+        }
+
+        function saveNewPartyToCloud() {
+            let name = document.getElementById('dash-party-name').value.trim();
+            let phone = document.getElementById('dash-party-phone').value.trim() || '923000000000';
+            let title = document.getElementById('dash-account-title').value.trim() || 'مین بل';
+            let total = Number(document.getElementById('dash-total-amount').value) || 0;
+            let paid = Number(document.getElementById('dash-paid-amount').value) || 0;
+            let rem = total - paid;
+
+            if (!name || total <= 0) {
+                alert("براہ کرم کسٹمر کا نام اور کل رقم درج کریں۔");
+                return;
+            }
+
+            let newParty = {
+                id: 'p_' + Date.now(),
+                name: name,
+                phone: phone,
+                date: new Date().toLocaleDateString(),
+                addedBy: localStorage.getItem('digikhata_active_user') || 'صارف',
+                images: [],
+                transactions: [{
+                    id: 't_' + Date.now(),
+                    date: new Date().toLocaleDateString(),
+                    desc: title,
+                    total: total,
+                    paid: paid,
+                    remaining: rem >= 0 ? rem : 0
+                }]
+            };
+
+            partiesList.unshift(newParty);
+            syncToUniversalCloud();
+
+            document.getElementById('dash-party-name').value = '';
+            document.getElementById('dash-party-phone').value = '';
+            document.getElementById('dash-account-title').value = '';
+            document.getElementById('dash-total-amount').value = '';
+            document.getElementById('dash-paid-amount').value = '';
+            document.getElementById('dash-remaining-amount').value = '';
+            alert("کلاؤڈ پر محفوظ ہو گیا! ✅");
+        }
+
+        function getPartyBalance(party) {
+            let sum = 0;
+            if (party.transactions) {
+                party.transactions.forEach(t => {
+                    sum += (Number(t.total) || 0) - (Number(t.paid) || 0);
+                });
+            }
+            return sum;
+        }
+
+        function renderDashboard() {
+            let totalPeople = partiesList.length;
+            let totalReceivable = 0;
+            partiesList.forEach(p => { totalReceivable += getPartyBalance(p); });
+
+            document.getElementById('total-parties-count').innerHTML = totalPeople + ' <span class="text-xs font-normal text-slate-500">لوگ</span>';
+            document.getElementById('total-receivable-amount').innerText = 'Rs ' + totalReceivable.toLocaleString();
+
+            let container = document.getElementById('parties-list');
+            container.innerHTML = '';
+            if (partiesList.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی اکاؤنٹ موجود نہیں۔ نیا کسٹمر درج کریں!</p>`;
+                return;
+            }
+
+            partiesList.forEach(item => {
+                let bal = getPartyBalance(item);
+                let initial = item.name.charAt(0).toUpperCase();
+                container.innerHTML += `<div onclick="openPartyLedger('${item.id}')" class="bg-white border border-slate-200 p-4 rounded-2xl flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-400 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
+                        <div>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
+                            <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-sm font-extrabold text-orange-600">Rs ${bal.toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400 font-semibold text-left">لینا ہے</p>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function openPartyLedger(partyId, isSilent = false) {
+            currentActivePartyId = partyId;
+            let party = partiesList.find(x => x.id === partyId);
+            if (!party) return;
+
+            document.getElementById('ledger-party-name').innerText = party.name;
+            document.getElementById('ledger-party-phone').innerText = "فون: " + party.phone;
+            document.getElementById('ledger-party-balance').innerText = `Rs ${getPartyBalance(party).toLocaleString()} (لینا ہے)`;
+
+            renderPartyImages(party);
+
+            let tbody = document.getElementById('ledger-transactions-body');
+            tbody.innerHTML = '';
+
+            if (!party.transactions || party.transactions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-slate-400">کوئی بل موجود نہیں۔</td></tr>`;
+            } else {
+                party.transactions.forEach((t) => {
+                    let rem = (Number(t.total) || 0) - (Number(t.paid) || 0);
+                    tbody.innerHTML += `<tr class="border-b">
+                        <td class="p-3.5 text-slate-500">${t.date}</td>
+                        <td class="p-3.5 font-bold text-slate-800">${t.desc}</td>
+                        <td class="p-3.5 font-semibold">Rs ${(Number(t.total) || 0).toLocaleString()}</td>
+                        <td class="p-3.5 text-emerald-600 font-bold">Rs ${(Number(t.paid) || 0).toLocaleString()}</td>
+                        <td class="p-3.5 text-orange-600 font-extrabold">Rs ${rem.toLocaleString()}</td>
+                        <td class="p-3.5 text-center">
+                            <button onclick="event.stopPropagation(); openEditBillModal('${party.id}', '${t.id}')" class="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-200 shadow">✏️ ایڈٹ</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            if (!isSilent) {
+                document.getElementById('app-screen').classList.add('hidden');
+                document.getElementById('party-ledger-screen').classList.remove('hidden');
+            }
+        }
+
+        function backToDashboard() {
+            closeLiveCamera();
+            currentActivePartyId = null;
+            document.getElementById('party-ledger-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+        }
+
+        // WhatsApp Reminder
+        function sendWhatsAppReminder() {
+            let party = partiesList.find(x => x.id === currentActivePartyId);
+            if (!party) return;
+            let bal = getPartyBalance(party);
+            let msg = `محترم ${party.name},\nڈیجیٹل کھاتہ کے مطابق آپ کا کل بقایا ادھار Rs ${bal.toLocaleString()} ہے۔ براہ کرم جلد ادائیگی کریں۔ شکریہ!`;
+            let url = `https://wa.me/${party.phone}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        // Live Camera & Gallery
+        async function openLiveCameraModal() {
+            document.getElementById('live-camera-modal').classList.remove('hidden');
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                document.getElementById('camera-stream').srcObject = mediaStream;
+            } catch (err) { alert("کیمرہ کی اجازت درکار ہے۔"); closeLiveCameraModal(); }
+        }
+        function closeLiveCamera() {
+            if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+        }
+        function closeLiveCameraModal() { closeLiveCamera(); document.getElementById('live-camera-modal').classList.add('hidden'); }
+        function captureLivePhoto() {
+            let video = document.getElementById('camera-stream');
+            let canvas = document.getElementById('camera-canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let dataUrl = canvas.toDataURL('image/png');
+
+            let party = partiesList.find(x => x.id === currentActivePartyId);
+            if (party) {
+                if (!party.images) party.images = [];
+                party.images.push(dataUrl);
+                syncToUniversalCloud();
+                alert("تصویر کلاؤڈ پر محفوظ ہو گئی!");
+            }
+            closeLiveCameraModal();
+        }
+
+        function handleGalleryUpload(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let party = partiesList.find(x => x.id === currentActivePartyId);
+                if (party) {
+                    if (!party.images) party.images = [];
+                    party.images.push(e.target.result);
+                    syncToUniversalCloud();
+                    alert("تصویر اپلوڈ ہو گئی!");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderPartyImages(party) {
+            let container = document.getElementById('party-images-container');
+            container.innerHTML = '';
+            if (!party.images || party.images.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full">کوئی تصویر محفوظ نہیں۔</p>`;
+                return;
+            }
+            party.images.forEach((imgSrc, idx) => {
+                container.innerHTML += `<div class="relative border rounded-xl overflow-hidden shadow-sm bg-white p-1">
+                    <img src="${imgSrc}" class="w-full h-24 object-cover rounded-lg cursor-pointer" onclick="previewImage('${imgSrc}')">
+                    <button onclick="deletePartyImage('${party.id}', ${idx})" class="absolute top-2 left-2 bg-rose-600 text-white rounded-full w-5 h-5 text-[10px] font-bold">×</button>
+                </div>`;
+            });
+        }
+        function previewImage(src) { document.getElementById('preview-img-tag').src = src; document.getElementById('image-preview-modal').classList.remove('hidden'); }
+        function closeImagePreview() { document.getElementById('image-preview-modal').classList.add('hidden'); }
+        function deletePartyImage(partyId, idx) {
+            let party = partiesList.find(x => x.id === partyId);
+            party.images.splice(idx, 1);
+            syncToUniversalCloud();
+        }
+
+        // Sub Accounts & Edit Bills
+        function openSubAccountModal() {
+            document.getElementById('sub-acc-title').value = '';
+            document.getElementById('sub-acc-total').value = '';
+            document.getElementById('sub-acc-paid').value = '';
+            document.getElementById('sub-acc-remaining').value = '';
+            document.getElementById('sub-account-modal').classList.remove('hidden');
+        }
+        function closeSubAccountModal() { document.getElementById('sub-account-modal').classList.add('hidden'); }
+        function calculateSubModalRemaining() {
+            let total = Number(document.getElementById('sub-acc-total').value) || 0;
+            let paid = Number(document.getElementById('sub-acc-paid').value) || 0;
+            let rem = total - paid;
+            document.getElementById('sub-acc-remaining').value = rem >= 0 ? rem : 0;
+        }
+        function saveNewSubAccountToCloud() {
+            let title = document.getElementById('sub-acc-title').value.trim() || 'نیا کھاتا';
+            let total = Number(document.getElementById('sub-acc-total').value) || 0;
+            let paid = Number(document.getElementById('sub-acc-paid').value) || 0;
+            let rem = total - paid;
+
+            if (total <= 0) { alert("کل رقم درج کریں۔"); return; }
+            let party = partiesList.find(x => x.id === currentActivePartyId);
+            if (!party) return;
+
+            party.transactions.push({
+                id: 't_' + Date.now(),
+                date: new Date().toLocaleDateString(),
+                desc: title,
+                total: total,
+                paid: paid,
+                remaining: rem >= 0 ? rem : 0
+            });
+
+            syncToUniversalCloud();
+            closeSubAccountModal();
+            openPartyLedger(party.id);
+        }
+
+        function openEditBillModal(partyId, txnId) {
+            let party = partiesList.find(x => x.id === partyId);
+            let txn = party.transactions.find(t => t.id === txnId);
+            if (!txn) return;
+
+            document.getElementById('edit-txn-id').value = txnId;
+            document.getElementById('edit-txn-desc').value = txn.desc;
+            document.getElementById('edit-txn-total').value = txn.total;
+            document.getElementById('edit-txn-paid').value = txn.paid;
+            document.getElementById('edit-txn-remaining').value = (Number(txn.total) || 0) - (Number(txn.paid) || 0);
+            document.getElementById('edit-bill-modal').classList.remove('hidden');
+        }
+        function closeEditBillModal() { document.getElementById('edit-bill-modal').classList.add('hidden'); }
+        function calculateEditModalRemaining() {
+            let total = Number(document.getElementById('edit-txn-total').value) || 0;
+            let paid = Number(document.getElementById('edit-txn-paid').value) || 0;
+            let rem = total - paid;
+            document.getElementById('edit-txn-remaining').value = rem >= 0 ? rem : 0;
+        }
+        function saveUpdatedBillToCloud() {
+            let txnId = document.getElementById('edit-txn-id').value;
+            let desc = document.getElementById('edit-txn-desc').value.trim();
+            let total = Number(document.getElementById('edit-txn-total').value) || 0;
+            let paid = Number(document.getElementById('edit-txn-paid').value) || 0;
+            let rem = total - paid;
+
+            let party = partiesList.find(x => x.id === currentActivePartyId);
+            let txn = party.transactions.find(t => t.id === txnId);
+            if (txn) {
+                txn.desc = desc;
+                txn.total = total;
+                txn.paid = paid;
+                txn.remaining = rem >= 0 ? rem : 0;
+                syncToUniversalCloud();
+                closeEditBillModal();
+                openPartyLedger(party.id);
+                alert("بل کامیابی سے اپڈیٹ ہو گیا! ✅");
+            }
+        }
+
+        function filterParties() {
+            let q = document.getElementById('search-box').value.toLowerCase();
+            let container = document.getElementById('parties-list');
+            container.innerHTML = '';
+            let filtered = partiesList.filter(x => x.name.toLowerCase().includes(q));
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی کسٹمر نہیں ملا۔</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let bal = getPartyBalance(item);
+                let initial = item.name.charAt(0).toUpperCase();
+                container.innerHTML += `<div onclick="openPartyLedger('${item.id}')" class="bg-white border border-slate-200 p-4 rounded-2xl flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-400 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
+                        <div>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
+                            <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-sm font-extrabold text-orange-600">Rs ${bal.toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400 font-semibold text-left">لینا ہے</p>
+                    </div>
+                </div>`;
+            });
+        }
+    </script>
+</body>
+</html>
