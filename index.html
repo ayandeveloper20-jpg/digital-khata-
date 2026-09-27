@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ڈیجیٹل کھاتہ - لائیو ملٹی یوزر سسٹم</title>
+    <title>ڈیجیٹل کھاتہ - پروفیشنل لائیو سسٹم</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDKs for Real-Time Cross-Device Cloud Sync -->
@@ -53,7 +53,7 @@
         <div class="bg-white shadow-2xl rounded-3xl p-6 sm:p-8 border border-orange-100">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">🔑</div>
-                <h1 class="text-2xl font-extrabold text-orange-600" id="login-header-title">لاگ ان کریں</h1>
+                <h1 class="text-2xl font-extrabold text-orange-600">لاگ ان کریں</h1>
                 <p class="text-slate-400 text-xs mt-1">اپنا خفیہ پن کوڈ درج کریں</p>
             </div>
             <div class="space-y-4 text-xs">
@@ -84,6 +84,7 @@
             </div>
             <div class="flex flex-wrap gap-2 items-center justify-center">
                 <button onclick="openEmployeesModal()" class="bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm hover:bg-indigo-100 transition">👥 ایمپلائیز لسٹ</button>
+                <button onclick="backupData()" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm hover:bg-blue-100 transition">💾 بیک اپ</button>
                 <button onclick="logoutApp()" class="bg-rose-50 text-rose-700 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-sm hover:bg-rose-100 transition">لاگ آؤٹ 🔄</button>
             </div>
         </div>
@@ -92,14 +93,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-slate-400 font-bold mb-1">کل کسٹمرز جن سے رقم لینی ہے</p>
+                    <p class="text-xs text-slate-400 font-bold mb-1">کل لوگ جن سے ادھار لینا ہے</p>
                     <h3 class="text-2xl font-extrabold text-slate-800" id="total-parties-count">0 <span class="text-xs font-normal text-slate-500">لوگ</span></h3>
                 </div>
                 <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl font-bold">👥</div>
             </div>
             <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-slate-400 font-bold mb-1">کل بقایا ادھار جو لوگوں سے لینا ہے</p>
+                    <p class="text-xs text-slate-400 font-bold mb-1">کل بقایا ادھار جو لینا ہے</p>
                     <h3 class="text-2xl font-extrabold text-emerald-600" id="total-receivable-amount">Rs 0</h3>
                 </div>
                 <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold">💰</div>
@@ -107,33 +108,37 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- بائیں طرف: نیا کسٹمر یا بل درج کرنے کا فارم -->
+            <!-- بائیں طرف: نیا کسٹمر فارم -->
             <div class="space-y-6">
                 <div class="bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm">
                     <h3 class="font-extrabold text-sm text-slate-800 mb-4 border-b pb-3">➕ نیا کسٹمر / کھاتا درج کریں</h3>
                     <div class="space-y-3.5 text-xs">
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">کسٹمر کا نام</label>
-                            <input type="text" id="dash-party-name" placeholder="مثلاً: علی الیکٹرونکس" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 font-bold shadow-sm">
+                            <input type="text" id="dash-party-name" placeholder="مثلاً: علی الیکٹرونکس" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold shadow-sm">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">فون نمبر (واٹس ایپ کے لیے)</label>
-                            <input type="text" id="dash-party-phone" placeholder="923001234567" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none focus:border-orange-500 shadow-sm">
+                            <label class="block font-bold text-slate-700 mb-1">مارکیٹ کا نام</label>
+                            <input type="text" id="dash-market-name" placeholder="مثلاً: الیکٹرانک مارکیٹ" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none shadow-sm">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">کھاتا یا بل کا عنوان</label>
-                            <input type="text" id="dash-account-title" placeholder="مثلاً: سامان خریدا / مین بل" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold shadow-sm">
+                            <label class="block font-bold text-slate-700 mb-1">شہر کا نام</label>
+                            <input type="text" id="dash-city-name" placeholder="مثلاً: لاہور" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">فون نمبر (واٹس ایپ)</label>
+                            <input type="text" id="dash-party-phone" placeholder="923001234567" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none shadow-sm">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 mb-1">کل ادھار رقم (Total Amount)</label>
                             <input type="number" id="dash-total-amount" placeholder="50000" oninput="calculateDashRemaining()" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold text-slate-800 text-base shadow-sm">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">آج کتنے پیسے وصول ہوئے؟ (Paid Now)</label>
+                            <label class="block font-bold text-slate-700 mb-1">آج کتنے پیسے وصول ہوئے؟ (Paid)</label>
                             <input type="number" id="dash-paid-amount" placeholder="10000" oninput="calculateDashRemaining()" class="w-full p-3.5 border rounded-2xl bg-slate-50 outline-none font-bold text-emerald-600 text-base shadow-sm">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">بقایا رقم جو لینی ہے (Remaining Balance)</label>
+                            <label class="block font-bold text-slate-700 mb-1">بقایا رقم (Remaining)</label>
                             <input type="text" id="dash-remaining-amount" readonly placeholder="0" class="w-full p-3.5 border rounded-2xl bg-orange-50 outline-none font-extrabold text-orange-600 text-base shadow-sm">
                         </div>
                         <button onclick="saveNewPartyToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
@@ -146,8 +151,8 @@
             <!-- دائیں طرف: تمام کسٹمرز کی لسٹ -->
             <div class="lg:col-span-2 bg-white border border-slate-200 p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
-                    <h3 class="font-extrabold text-sm text-slate-800">📋 تمام کسٹمرز کے اکاؤنٹس (لائیو سنکڈ)</h3>
-                    <input type="text" id="search-box" placeholder="🔍 نام سے تلاش کریں..." onkeyup="filterParties()" class="p-3 border rounded-2xl text-xs outline-none bg-slate-50 w-full sm:w-60 shadow-sm">
+                    <h3 class="font-extrabold text-sm text-slate-800">📋 تمام کسٹمرز کی لسٹ (لائیو سنکڈ)</h3>
+                    <input type="text" id="search-box" placeholder="🔍 نام یا شہر سے تلاش کریں..." onkeyup="filterParties()" class="p-3 border rounded-2xl text-xs outline-none bg-slate-50 w-full sm:w-60 shadow-sm">
                 </div>
                 <div id="parties-list" class="space-y-3 overflow-y-auto max-h-[600px]"></div>
             </div>
@@ -162,7 +167,7 @@
                     <button onclick="backToDashboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs font-bold transition">⬅ واپس</button>
                     <div>
                         <h3 class="font-extrabold text-base text-slate-800" id="ledger-party-name">--</h3>
-                        <p class="text-xs text-slate-400 font-semibold" id="ledger-party-phone">--</p>
+                        <p class="text-xs text-slate-400 font-semibold" id="ledger-party-details">--</p>
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -197,7 +202,7 @@
                     <thead>
                         <tr class="bg-slate-100 text-slate-700 border-b">
                             <th class="p-3.5">تاریخ</th>
-                            <th class="p-3.5">کھاتا / بل کا نام</th>
+                            <th class="p-3.5">تفصیل / بل</th>
                             <th class="p-3.5">کل رقم (Total)</th>
                             <th class="p-3.5 text-emerald-600">وصول شدہ (Paid)</th>
                             <th class="p-3.5 text-orange-600">بقایا (Remaining)</th>
@@ -214,7 +219,7 @@
     <div id="employees-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
         <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="font-bold text-slate-800 text-sm">👥 رجسٹرڈ ایمپلائیز / یوزرز (لائیو)</h3>
+                <h3 class="font-bold text-slate-800 text-sm">👥 رجسٹرڈ ایمپلائیز / لائیو یوزرز</h3>
                 <button onclick="closeEmployeesModal()" class="text-rose-600 font-bold text-base">✖</button>
             </div>
             <div id="employees-list-container" class="space-y-3 overflow-y-auto max-h-[400px] text-xs"></div>
@@ -231,7 +236,7 @@
             </div>
             <div class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">نیا کھاتا یا بل کا نام</label>
+                    <label class="block font-bold text-slate-700 mb-1">تفصیل / بل کا نام</label>
                     <input type="text" id="sub-acc-title" placeholder="مثلاً: نیا آرڈر" class="w-full p-3.5 border rounded-2xl outline-none font-bold shadow-sm">
                 </div>
                 <div>
@@ -243,7 +248,7 @@
                     <input type="number" id="sub-acc-paid" placeholder="10000" oninput="calculateSubModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-emerald-600 text-base shadow-sm">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">باقی رقم (Remaining Balance)</label>
+                    <label class="block font-bold text-slate-700 mb-1">بقایا رقم (Remaining)</label>
                     <input type="text" id="sub-acc-remaining" readonly class="w-full p-3.5 border rounded-2xl outline-none font-extrabold text-orange-600 text-base bg-orange-50 shadow-sm">
                 </div>
                 <button onclick="saveNewSubAccountToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
@@ -263,23 +268,23 @@
             <div class="space-y-3.5 text-xs">
                 <input type="hidden" id="edit-txn-id">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">کھاتا / بل کا نام</label>
+                    <label class="block font-bold text-slate-700 mb-1">تفصیل</label>
                     <input type="text" id="edit-txn-desc" class="w-full p-3.5 border rounded-2xl outline-none font-bold shadow-sm">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">کل رقم (Total Amount)</label>
-                    <input type="number" id="edit-txn-total" oninput="calculateEditModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-slate-800 text-base shadow-sm">
+                    <label class="block font-bold text-slate-700 mb-1">کل رقم</label>
+                    <input type="number" id="edit-txn-total" oninput="calculateEditModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-base shadow-sm">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">کل وصول شدہ رقم (Total Paid)</label>
+                    <label class="block font-bold text-slate-700 mb-1">وصول شدہ</label>
                     <input type="number" id="edit-txn-paid" oninput="calculateEditModalRemaining()" class="w-full p-3.5 border rounded-2xl outline-none font-bold text-emerald-600 text-base shadow-sm">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">بقایا رقم (Remaining Balance)</label>
+                    <label class="block font-bold text-slate-700 mb-1">بقایا</label>
                     <input type="text" id="edit-txn-remaining" readonly class="w-full p-3.5 border rounded-2xl outline-none font-extrabold text-orange-600 text-base bg-orange-50 shadow-sm">
                 </div>
                 <button onclick="saveUpdatedBillToCloud()" class="w-full digi-orange text-white py-4 rounded-2xl font-extrabold shadow-lg hover:opacity-95 transition text-sm">
-                    کلاؤڈ پر اپڈیٹ کریں ☁️✅
+                    اپڈیٹ کریں ☁️✅
                 </button>
             </div>
         </div>
@@ -297,7 +302,7 @@
                 <canvas id="camera-canvas" class="hidden"></canvas>
             </div>
             <button onclick="captureLivePhoto()" class="w-full bg-emerald-600 text-white py-3 rounded-2xl font-bold text-xs shadow hover:bg-emerald-700 transition">
-                📸 تصویر کلاؤڈ پر محفوظ کریں ✅
+                📸 تصویر محفوظ کریں ✅
             </button>
         </div>
     </div>
@@ -327,7 +332,7 @@
         let employeesList = [];
 
         window.onload = function() {
-            // ایمپلائیز لسٹ کا لائیو سنک
+            // ایمپلائیز کا لائیو سنک
             db.ref('universal_employees').on('value', (snapshot) => {
                 let data = snapshot.val();
                 employeesList = data ? Object.values(data) : [];
@@ -379,7 +384,7 @@
             let pin = document.getElementById('reg-pin').value.trim();
             
             if (!name || !phone || !pin) {
-                alert("براہ کرم تمام خانے (نام، فون، پن) پر کریں۔");
+                alert("براہ کرم تمام خانے پر کریں۔");
                 return;
             }
 
@@ -393,7 +398,7 @@
                 document.getElementById('register-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + name;
-                alert("اکاؤنٹ کامیابی سے بن گیا ہے! 🎉");
+                alert("اکاؤنٹ بن گیا! 🎉");
             }).catch(err => {
                 alert("خرابی: " + err.message);
             });
@@ -404,7 +409,7 @@
             let matchedEmp = employeesList.find(e => e.pin === enteredPin);
 
             if (matchedEmp || enteredPin.length > 0) {
-                let userName = matchedEmp ? matchedEmp.name : (localStorage.getItem('digikhata_active_user') || 'ڈویلپر یوزر');
+                let userName = matchedEmp ? matchedEmp.name : "صارف";
                 localStorage.setItem('digikhata_active_user', userName);
                 localStorage.setItem('digikhata_saved_pin', enteredPin);
 
@@ -430,7 +435,7 @@
             let container = document.getElementById('employees-list-container');
             container.innerHTML = '';
             if (employeesList.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-400 p-4">کوئی ایمپلائی رجسٹرڈ نہیں۔</p>`;
+                container.innerHTML = `<p class="text-center text-slate-400 p-4">کوئی ایمپلائی نہیں۔</p>`;
             } else {
                 employeesList.forEach(emp => {
                     container.innerHTML += `<div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex justify-between items-center mb-2 shadow-sm">
@@ -457,20 +462,23 @@
 
         function saveNewPartyToCloud() {
             let name = document.getElementById('dash-party-name').value.trim();
+            let market = document.getElementById('dash-market-name').value.trim() || 'جنرل مارکیٹ';
+            let city = document.getElementById('dash-city-name').value.trim() || 'لاہور';
             let phone = document.getElementById('dash-party-phone').value.trim() || '923000000000';
-            let title = document.getElementById('dash-account-title').value.trim() || 'مین بل';
             let total = Number(document.getElementById('dash-total-amount').value) || 0;
             let paid = Number(document.getElementById('dash-paid-amount').value) || 0;
             let rem = total - paid;
 
             if (!name || total <= 0) {
-                alert("براہ کرم کسٹمر کا نام اور کل رقم درج کریں۔");
+                alert("کسٹمر کا نام اور کل رقم درج کریں۔");
                 return;
             }
 
             let newParty = {
                 id: 'p_' + Date.now(),
                 name: name,
+                market: market,
+                city: city,
                 phone: phone,
                 date: new Date().toLocaleDateString(),
                 addedBy: localStorage.getItem('digikhata_active_user') || 'صارف',
@@ -478,7 +486,7 @@
                 transactions: [{
                     id: 't_' + Date.now(),
                     date: new Date().toLocaleDateString(),
-                    desc: title,
+                    desc: 'پہلا بل / ادھار',
                     total: total,
                     paid: paid,
                     remaining: rem >= 0 ? rem : 0
@@ -489,8 +497,9 @@
             syncToUniversalCloud();
 
             document.getElementById('dash-party-name').value = '';
+            document.getElementById('dash-market-name').value = '';
+            document.getElementById('dash-city-name').value = '';
             document.getElementById('dash-party-phone').value = '';
-            document.getElementById('dash-account-title').value = '';
             document.getElementById('dash-total-amount').value = '';
             document.getElementById('dash-paid-amount').value = '';
             document.getElementById('dash-remaining-amount').value = '';
@@ -508,9 +517,16 @@
         }
 
         function renderDashboard() {
-            let totalPeople = partiesList.length;
+            let totalPeople = 0;
             let totalReceivable = 0;
-            partiesList.forEach(p => { totalReceivable += getPartyBalance(p); });
+            
+            partiesList.forEach(p => {
+                let bal = getPartyBalance(p);
+                if (bal > 0) {
+                    totalPeople++;
+                    totalReceivable += bal;
+                }
+            });
 
             document.getElementById('total-parties-count').innerHTML = totalPeople + ' <span class="text-xs font-normal text-slate-500">لوگ</span>';
             document.getElementById('total-receivable-amount').innerText = 'Rs ' + totalReceivable.toLocaleString();
@@ -518,7 +534,7 @@
             let container = document.getElementById('parties-list');
             container.innerHTML = '';
             if (partiesList.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی اکاؤنٹ موجود نہیں۔ نیا کسٹمر درج کریں!</p>`;
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی اکاؤنٹ موجود نہیں۔</p>`;
                 return;
             }
 
@@ -529,7 +545,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
                         <div>
-                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.market}, ${item.city})</span></h5>
                             <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
                         </div>
                     </div>
@@ -547,7 +563,7 @@
             if (!party) return;
 
             document.getElementById('ledger-party-name').innerText = party.name;
-            document.getElementById('ledger-party-phone').innerText = "فون: " + party.phone;
+            document.getElementById('ledger-party-details').innerText = `مارکیٹ: ${party.market} | شہر: ${party.city} | فون: ${party.phone}`;
             document.getElementById('ledger-party-balance').innerText = `Rs ${getPartyBalance(party).toLocaleString()} (لینا ہے)`;
 
             renderPartyImages(party);
@@ -556,7 +572,7 @@
             tbody.innerHTML = '';
 
             if (!party.transactions || party.transactions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-slate-400">کوئی بل موجود نہیں۔</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-slate-400">کوئی بل نہیں۔</td></tr>`;
             } else {
                 party.transactions.forEach((t) => {
                     let rem = (Number(t.total) || 0) - (Number(t.paid) || 0);
@@ -586,17 +602,16 @@
             document.getElementById('app-screen').classList.remove('hidden');
         }
 
-        // WhatsApp Reminder
         function sendWhatsAppReminder() {
             let party = partiesList.find(x => x.id === currentActivePartyId);
             if (!party) return;
             let bal = getPartyBalance(party);
-            let msg = `محترم ${party.name},\nڈیجیٹل کھاتہ کے مطابق آپ کا کل بقایا ادھار Rs ${bal.toLocaleString()} ہے۔ براہ کرم جلد ادائیگی کریں۔ شکریہ!`;
+            let msg = `محترم ${party.name},\nڈیجیٹل کھاتہ کے مطابق آپ کا کل بقایا ادھار Rs ${bal.toLocaleString()} ہے۔ براہ کرم ادائیگی کریں۔ شکریہ!`;
             let url = `https://wa.me/${party.phone}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
         }
 
-        // Live Camera & Gallery
+        // Camera & Gallery
         async function openLiveCameraModal() {
             document.getElementById('live-camera-modal').classList.remove('hidden');
             try {
@@ -622,7 +637,7 @@
                 if (!party.images) party.images = [];
                 party.images.push(dataUrl);
                 syncToUniversalCloud();
-                alert("تصویر کلاؤڈ پر محفوظ ہو گئی!");
+                alert("تصویر محفوظ ہو گئی!");
             }
             closeLiveCameraModal();
         }
@@ -647,7 +662,7 @@
             let container = document.getElementById('party-images-container');
             container.innerHTML = '';
             if (!party.images || party.images.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full">کوئی تصویر محفوظ نہیں۔</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full">کوئی تصویر موجود نہیں۔</p>`;
                 return;
             }
             party.images.forEach((imgSrc, idx) => {
@@ -740,18 +755,29 @@
                 syncToUniversalCloud();
                 closeEditBillModal();
                 openPartyLedger(party.id);
-                alert("بل کامیابی سے اپڈیٹ ہو گیا! ✅");
+                alert("بل اپڈیٹ ہو گیا! ✅");
             }
+        }
+
+        // Backup & Restore
+        function backupData() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(partiesList));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "digital_khata_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
 
         function filterParties() {
             let q = document.getElementById('search-box').value.toLowerCase();
             let container = document.getElementById('parties-list');
             container.innerHTML = '';
-            let filtered = partiesList.filter(x => x.name.toLowerCase().includes(q));
+            let filtered = partiesList.filter(x => x.name.toLowerCase().includes(q) || x.city.toLowerCase().includes(q));
             
             if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی کسٹمر نہیں ملا۔</p>`;
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی نتیجہ نہیں ملا۔</p>`;
                 return;
             }
 
@@ -762,7 +788,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
                         <div>
-                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.market}, ${item.city})</span></h5>
                             <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
                         </div>
                     </div>
